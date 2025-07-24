@@ -43,6 +43,7 @@ const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'sushi' | 'rolls' | 'pizza'>('all');
   const [orderForm, setOrderForm] = useState<OrderForm>({
     name: '',
     phone: '',
@@ -140,8 +141,19 @@ const Index = () => {
     );
   };
 
+  const filteredMenuItems = selectedCategory === 'all' 
+    ? menuItems 
+    : menuItems.filter(item => item.category === selectedCategory);
+
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const categories = [
+    { id: 'all', name: 'Все', emoji: '🍽️' },
+    { id: 'sushi', name: 'Суши', emoji: '🍣' },
+    { id: 'rolls', name: 'Роллы', emoji: '🍱' },
+    { id: 'pizza', name: 'Пицца', emoji: '🍕' }
+  ];
 
   const validateForm = (): boolean => {
     const newErrors: Partial<OrderForm> = {};
@@ -286,13 +298,32 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h3 className="text-4xl font-bold text-gray-800 mb-4">Наше меню</h3>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 max-w-2xl mx-auto mb-8">
               Отборные ингредиенты, традиционные рецепты и современные интерпретации японской кухни
             </p>
+            
+            {/* Category Filter */}
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? "default" : "outline"}
+                  onClick={() => setSelectedCategory(category.id as 'all' | 'sushi' | 'rolls' | 'pizza')}
+                  className={`px-6 py-3 rounded-full transition-all duration-300 ${
+                    selectedCategory === category.id 
+                      ? 'bg-japanese-red hover:bg-red-700 text-white shadow-lg scale-105' 
+                      : 'border-japanese-red text-japanese-red hover:bg-japanese-red hover:text-white'
+                  }`}
+                >
+                  <span className="mr-2 text-lg">{category.emoji}</span>
+                  {category.name}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {menuItems.map(item => (
+            {filteredMenuItems.map(item => (
               <Card key={item.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <div className="aspect-video overflow-hidden">
                   <img 
