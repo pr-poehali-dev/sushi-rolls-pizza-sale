@@ -18,6 +18,17 @@ interface MenuItem {
   price: number;
   category: 'sushi' | 'pizza' | 'rolls';
   image: string;
+  calories: number;
+  ingredients: string[];
+  weight: string;
+}
+
+interface Review {
+  id: number;
+  name: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 interface CartItem extends MenuItem {
@@ -46,6 +57,8 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'sushi' | 'rolls' | 'pizza'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [orderForm, setOrderForm] = useState<OrderForm>({
     name: '',
     phone: '',
@@ -69,7 +82,10 @@ const Index = () => {
       description: 'Свежий лосось на рисовой подушке',
       price: 120,
       category: 'sushi',
-      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg'
+      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg',
+      calories: 45,
+      ingredients: ['Лосось', 'Рис', 'Васаби', 'Имбирь'],
+      weight: '30г'
     },
     {
       id: 2,
@@ -77,7 +93,10 @@ const Index = () => {
       description: 'Лосось, сливочный сыр, огурец',
       price: 350,
       category: 'rolls',
-      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg'
+      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg',
+      calories: 255,
+      ingredients: ['Лосось', 'Сливочный сыр', 'Огурец', 'Нори', 'Рис'],
+      weight: '180г'
     },
     {
       id: 3,
@@ -85,7 +104,10 @@ const Index = () => {
       description: 'Лосось, нори, кунжут, соус унаги',
       price: 480,
       category: 'pizza',
-      image: '/img/bb9fefb1-f936-4994-be61-91f751aea1b2.jpg'
+      image: '/img/bb9fefb1-f936-4994-be61-91f751aea1b2.jpg',
+      calories: 320,
+      ingredients: ['Лосось', 'Нори', 'Кунжут', 'Соус унаги', 'Тесто'],
+      weight: '250г'
     },
     {
       id: 4,
@@ -93,7 +115,10 @@ const Index = () => {
       description: 'Краб, авокадо, огурец, икра тобико',
       price: 320,
       category: 'rolls',
-      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg'
+      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg',
+      calories: 230,
+      ingredients: ['Краб', 'Авокадо', 'Огурец', 'Икра тобико', 'Нори', 'Рис'],
+      weight: '170г'
     },
     {
       id: 5,
@@ -101,7 +126,10 @@ const Index = () => {
       description: 'Свежайший тунец, васаби, имбирь',
       price: 280,
       category: 'sushi',
-      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg'
+      image: '/img/08fdbaa0-2f2b-43d1-81d7-969140a14918.jpg',
+      calories: 65,
+      ingredients: ['Тунец', 'Васаби', 'Имбирь'],
+      weight: '40г'
     },
     {
       id: 6,
@@ -109,7 +137,10 @@ const Index = () => {
       description: 'Угорь, авокадо, кунжут, соус терияки',
       price: 520,
       category: 'pizza',
-      image: '/img/bb9fefb1-f936-4994-be61-91f751aea1b2.jpg'
+      image: '/img/bb9fefb1-f936-4994-be61-91f751aea1b2.jpg',
+      calories: 380,
+      ingredients: ['Угорь', 'Авокадо', 'Кунжут', 'Соус терияки', 'Тесто'],
+      weight: '270г'
     }
   ];
 
@@ -160,6 +191,46 @@ const Index = () => {
     { id: 'rolls', name: 'Роллы', emoji: '🍱' },
     { id: 'pizza', name: 'Пицца', emoji: '🍕' }
   ];
+
+  const reviews: Review[] = [
+    {
+      id: 1,
+      name: 'Анна Иванова',
+      rating: 5,
+      comment: 'Невероятно вкусные роллы! Доставка быстрая, все свежее. Обязательно закажем еще.',
+      date: '2024-01-15'
+    },
+    {
+      id: 2,
+      name: 'Максим Петров',
+      rating: 5,
+      comment: 'Лучшие суши в городе! Японская пицца просто восхитительна. Рекомендую всем!',
+      date: '2024-01-10'
+    },
+    {
+      id: 3,
+      name: 'Елена Смирнова',
+      rating: 4,
+      comment: 'Качественные продукты, красивая подача. Немного долго ждали доставку, но результат того стоил.',
+      date: '2024-01-08'
+    }
+  ];
+
+  const openItemModal = (item: MenuItem) => {
+    setSelectedItem(item);
+    setIsItemModalOpen(true);
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Icon
+        key={i}
+        name="Star"
+        size={16}
+        className={i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+      />
+    ));
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Partial<OrderForm> = {};
@@ -574,6 +645,14 @@ const Index = () => {
                     <span className="text-2xl font-bold text-japanese-red">{item.price}₽</span>
                     <div className="flex gap-2">
                       <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openItemModal(item)}
+                        className="border-japanese-red text-japanese-red hover:bg-japanese-red hover:text-white"
+                      >
+                        <Icon name="Info" size={16} />
+                      </Button>
+                      <Button 
                         onClick={() => addToCart(item)} 
                         className="bg-japanese-red hover:bg-red-700"
                       >
@@ -671,8 +750,74 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Reviews Section */}
+      <section id="reviews" className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h3 className="text-4xl font-bold text-gray-800 mb-4">Отзывы</h3>
+            <p className="text-gray-600">Что говорят наши клиенты</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {reviews.map(review => (
+              <Card key={review.id} className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="flex mr-2">
+                    {renderStars(review.rating)}
+                  </div>
+                  <span className="text-sm text-gray-500">({review.rating}/5)</span>
+                </div>
+                <p className="text-gray-700 mb-4 italic">"{review.comment}"</p>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="font-semibold text-japanese-red">{review.name}</span>
+                  <span className="text-gray-500">{new Date(review.date).toLocaleDateString('ru-RU')}</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h3 className="text-4xl font-bold text-gray-800 mb-4">Часто задаваемые вопросы</h3>
+          </div>
+          
+          <div className="max-w-3xl mx-auto">
+            <div className="space-y-4">
+              <Card className="p-6">
+                <h4 className="text-lg font-semibold mb-2 text-japanese-red">🕐 Сколько времени занимает доставка?</h4>
+                <p className="text-gray-700">Среднее время доставки составляет 30-45 минут в зависимости от вашего местоположения и загруженности.</p>
+              </Card>
+              
+              <Card className="p-6">
+                <h4 className="text-lg font-semibold mb-2 text-japanese-red">💳 Какие способы оплаты вы принимаете?</h4>
+                <p className="text-gray-700">Мы принимаем наличные, банковские карты при получении, а также онлайн-оплату через наш сайт.</p>
+              </Card>
+              
+              <Card className="p-6">
+                <h4 className="text-lg font-semibold mb-2 text-japanese-red">🍣 Из каких ингредиентов готовятся ваши блюда?</h4>
+                <p className="text-gray-700">Мы используем только свежие продукты высочайшего качества: норвежский лосось, японский рис, свежие овощи и традиционные соусы.</p>
+              </Card>
+              
+              <Card className="p-6">
+                <h4 className="text-lg font-semibold mb-2 text-japanese-red">📦 Какая минимальная сумма заказа?</h4>
+                <p className="text-gray-700">Минимальная сумма заказа составляет 500₽. При заказе от 1000₽ доставка бесплатная!</p>
+              </Card>
+              
+              <Card className="p-6">
+                <h4 className="text-lg font-semibold mb-2 text-japanese-red">🌡️ Как хранятся продукты?</h4>
+                <p className="text-gray-700">Все продукты хранятся в специальных холодильных камерах при температуре от 0 до +4°C. Доставка осуществляется в термосумках.</p>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Contacts Section */}
-      <section id="contacts" className="py-16 bg-gray-50">
+      <section id="contacts" className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h3 className="text-4xl font-bold text-gray-800 mb-4">Контакты</h3>
@@ -710,6 +855,77 @@ const Index = () => {
           <p className="text-gray-400">© 2024 Sakura Sushi. Все права защищены.</p>
         </div>
       </footer>
+
+      {/* Item Details Modal */}
+      <Dialog open={isItemModalOpen} onOpenChange={setIsItemModalOpen}>
+        <DialogContent className="max-w-2xl">
+          {selectedItem && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl text-japanese-red">{selectedItem.name}</DialogTitle>
+                <DialogDescription>Подробная информация о блюде</DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-6">
+                <div className="aspect-video overflow-hidden rounded-lg">
+                  <img 
+                    src={selectedItem.image} 
+                    alt={selectedItem.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-lg font-semibold mb-2">Описание</h4>
+                    <p className="text-gray-700 mb-4">{selectedItem.description}</p>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="font-medium">Вес:</span>
+                        <span>{selectedItem.weight}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Калории:</span>
+                        <span>{selectedItem.calories} ккал</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Цена:</span>
+                        <span className="text-xl font-bold text-japanese-red">{selectedItem.price}₽</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-lg font-semibold mb-2">Состав</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedItem.ingredients.map((ingredient, index) => (
+                        <Badge key={index} variant="secondary" className="bg-japanese-gold/10 text-japanese-gold">
+                          {ingredient}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-6">
+                      <Button 
+                        onClick={() => {
+                          addToCart(selectedItem);
+                          setIsItemModalOpen(false);
+                        }}
+                        className="w-full bg-japanese-red hover:bg-red-700"
+                        size="lg"
+                      >
+                        <Icon name="Plus" size={20} className="mr-2" />
+                        Добавить в корзину
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
