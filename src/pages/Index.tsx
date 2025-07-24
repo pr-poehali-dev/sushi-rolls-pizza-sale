@@ -44,6 +44,8 @@ const Index = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'sushi' | 'rolls' | 'pizza'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [orderForm, setOrderForm] = useState<OrderForm>({
     name: '',
     phone: '',
@@ -141,9 +143,13 @@ const Index = () => {
     );
   };
 
-  const filteredMenuItems = selectedCategory === 'all' 
-    ? menuItems 
-    : menuItems.filter(item => item.category === selectedCategory);
+  const filteredMenuItems = menuItems
+    .filter(item => selectedCategory === 'all' || item.category === selectedCategory)
+    .filter(item => 
+      searchQuery === '' || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -180,6 +186,14 @@ const Index = () => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const toggleFavorite = (itemId: number) => {
+    setFavorites(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
   };
 
   const handleSubmitOrder = () => {
@@ -264,9 +278,196 @@ const Index = () => {
                           <span className="text-lg font-semibold">Итого:</span>
                           <span className="text-lg font-bold text-japanese-red">{totalPrice}₽</span>
                         </div>
-                        <Button className="w-full bg-japanese-red hover:bg-red-700">
-                          Оформить заказ
-                        </Button>
+                        <Dialog open={isOrderFormOpen} onOpenChange={setIsOrderFormOpen}>
+                          <DialogTrigger asChild>
+                            <Button className="w-full bg-japanese-red hover:bg-red-700">
+                              Оформить заказ
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle className="text-2xl text-japanese-red">Оформление заказа</DialogTitle>
+                              <DialogDescription>
+                                Заполните форму для доставки вашего заказа
+                              </DialogDescription>
+                            </DialogHeader>
+                            
+                            <div className="grid gap-6 py-4">
+                              {/* Контактная информация */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Контактная информация</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="name">Имя *</Label>
+                                    <Input
+                                      id="name"
+                                      value={orderForm.name}
+                                      onChange={(e) => handleInputChange('name', e.target.value)}
+                                      className={errors.name ? 'border-red-500' : ''}
+                                      placeholder="Ваше имя"
+                                    />
+                                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="phone">Телефон *</Label>
+                                    <Input
+                                      id="phone"
+                                      value={orderForm.phone}
+                                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                                      className={errors.phone ? 'border-red-500' : ''}
+                                      placeholder="+7 (999) 123-45-67"
+                                    />
+                                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                      id="email"
+                                      type="email"
+                                      value={orderForm.email}
+                                      onChange={(e) => handleInputChange('email', e.target.value)}
+                                      className={errors.email ? 'border-red-500' : ''}
+                                      placeholder="your@email.com"
+                                    />
+                                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Адрес доставки */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Адрес доставки</h3>
+                                <div>
+                                  <Label htmlFor="address">Адрес *</Label>
+                                  <Input
+                                    id="address"
+                                    value={orderForm.address}
+                                    onChange={(e) => handleInputChange('address', e.target.value)}
+                                    className={errors.address ? 'border-red-500' : ''}
+                                    placeholder="Улица, дом"
+                                  />
+                                  {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div>
+                                    <Label htmlFor="apartment">Квартира</Label>
+                                    <Input
+                                      id="apartment"
+                                      value={orderForm.apartment}
+                                      onChange={(e) => handleInputChange('apartment', e.target.value)}
+                                      placeholder="123"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="entrance">Подъезд</Label>
+                                    <Input
+                                      id="entrance"
+                                      value={orderForm.entrance}
+                                      onChange={(e) => handleInputChange('entrance', e.target.value)}
+                                      placeholder="1"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="floor">Этаж</Label>
+                                    <Input
+                                      id="floor"
+                                      value={orderForm.floor}
+                                      onChange={(e) => handleInputChange('floor', e.target.value)}
+                                      placeholder="5"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="intercom">Домофон</Label>
+                                    <Input
+                                      id="intercom"
+                                      value={orderForm.intercom}
+                                      onChange={(e) => handleInputChange('intercom', e.target.value)}
+                                      placeholder="123"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Время доставки */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Время доставки</h3>
+                                <RadioGroup
+                                  value={orderForm.deliveryTime}
+                                  onValueChange={(value) => handleInputChange('deliveryTime', value)}
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="asap" id="asap" />
+                                    <Label htmlFor="asap">Как можно скорее</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="scheduled" id="scheduled" />
+                                    <Label htmlFor="scheduled">На определенное время</Label>
+                                  </div>
+                                </RadioGroup>
+                                {orderForm.deliveryTime === 'scheduled' && (
+                                  <Input
+                                    type="datetime-local"
+                                    value={orderForm.scheduledTime}
+                                    onChange={(e) => handleInputChange('scheduledTime', e.target.value)}
+                                    min={new Date().toISOString().slice(0, 16)}
+                                  />
+                                )}
+                              </div>
+
+                              {/* Способ оплаты */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Способ оплаты</h3>
+                                <Select
+                                  value={orderForm.paymentMethod}
+                                  onValueChange={(value) => handleInputChange('paymentMethod', value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="cash">Наличными курьеру</SelectItem>
+                                    <SelectItem value="card">Картой курьеру</SelectItem>
+                                    <SelectItem value="online">Онлайн оплата</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Комментарий */}
+                              <div className="space-y-4">
+                                <h3 className="text-lg font-semibold">Комментарий к заказу</h3>
+                                <Textarea
+                                  value={orderForm.comment}
+                                  onChange={(e) => handleInputChange('comment', e.target.value)}
+                                  placeholder="Дополнительные пожелания..."
+                                  rows={3}
+                                />
+                              </div>
+
+                              {/* Итого */}
+                              <div className="border-t pt-4">
+                                <div className="space-y-2">
+                                  {cart.map(item => (
+                                    <div key={item.id} className="flex justify-between text-sm">
+                                      <span>{item.name} x{item.quantity}</span>
+                                      <span>{item.price * item.quantity}₽</span>
+                                    </div>
+                                  ))}
+                                  <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                                    <span>Итого:</span>
+                                    <span className="text-japanese-red">{totalPrice}₽</span>
+                                  </div>
+                                </div>
+                                <Button 
+                                  onClick={handleSubmitOrder}
+                                  className="w-full mt-4 bg-japanese-red hover:bg-red-700"
+                                  size="lg"
+                                >
+                                  Подтвердить заказ
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </>
                   )}
@@ -302,6 +503,20 @@ const Index = () => {
               Отборные ингредиенты, традиционные рецепты и современные интерпретации японской кухни
             </p>
             
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto mb-8">
+              <div className="relative">
+                <Icon name="Search" size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Поиск блюд..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-3 rounded-full border-2 border-japanese-red/20 focus:border-japanese-red"
+                />
+              </div>
+            </div>
+
             {/* Category Filter */}
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {categories.map(category => (
@@ -324,13 +539,25 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredMenuItems.map(item => (
-              <Card key={item.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className="aspect-video overflow-hidden">
+              <Card key={item.id} className="overflow-hidden hover:shadow-xl transition-shadow duration-300 relative">
+                <div className="aspect-video overflow-hidden relative">
                   <img 
                     src={item.image} 
                     alt={item.name}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => toggleFavorite(item.id)}
+                    className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-2"
+                  >
+                    <Icon 
+                      name="Heart" 
+                      size={16} 
+                      className={favorites.includes(item.id) ? 'text-red-500 fill-current' : 'text-gray-400'} 
+                    />
+                  </Button>
                 </div>
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -345,10 +572,15 @@ const Index = () => {
                 <CardContent>
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-japanese-red">{item.price}₽</span>
-                    <Button onClick={() => addToCart(item)} className="bg-japanese-red hover:bg-red-700">
-                      <Icon name="Plus" size={16} className="mr-1" />
-                      В корзину
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => addToCart(item)} 
+                        className="bg-japanese-red hover:bg-red-700"
+                      >
+                        <Icon name="Plus" size={16} className="mr-1" />
+                        В корзину
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
