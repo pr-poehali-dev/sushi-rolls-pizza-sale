@@ -3,6 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 
 interface MenuItem {
@@ -18,9 +24,40 @@ interface CartItem extends MenuItem {
   quantity: number;
 }
 
+interface OrderForm {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  apartment: string;
+  entrance: string;
+  floor: string;
+  intercom: string;
+  comment: string;
+  paymentMethod: 'cash' | 'card' | 'online';
+  deliveryTime: 'asap' | 'scheduled';
+  scheduledTime: string;
+}
+
 const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+  const [orderForm, setOrderForm] = useState<OrderForm>({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    apartment: '',
+    entrance: '',
+    floor: '',
+    intercom: '',
+    comment: '',
+    paymentMethod: 'cash',
+    deliveryTime: 'asap',
+    scheduledTime: ''
+  });
+  const [errors, setErrors] = useState<Partial<OrderForm>>({});
 
   const menuItems: MenuItem[] = [
     {
@@ -105,6 +142,43 @@ const Index = () => {
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const validateForm = (): boolean => {
+    const newErrors: Partial<OrderForm> = {};
+    
+    if (!orderForm.name.trim()) newErrors.name = 'Имя обязательно';
+    if (!orderForm.phone.trim()) newErrors.phone = 'Телефон обязателен';
+    if (!orderForm.address.trim()) newErrors.address = 'Адрес обязателен';
+    
+    const phoneRegex = /^[+]?[7|8]?[\s-]?\(?[0-9]{3}\)?[\s-]?[0-9]{3}[\s-]?[0-9]{2}[\s-]?[0-9]{2}$/;
+    if (orderForm.phone && !phoneRegex.test(orderForm.phone)) {
+      newErrors.phone = 'Некорректный формат телефона';
+    }
+    
+    if (orderForm.email && !/\S+@\S+\.\S+/.test(orderForm.email)) {
+      newErrors.email = 'Некорректный email';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof OrderForm, value: string) => {
+    setOrderForm(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleSubmitOrder = () => {
+    if (!validateForm()) return;
+    
+    // Здесь будет логика отправки заказа
+    alert('Заказ оформлен! Мы свяжемся с вами в ближайшее время.');
+    setIsOrderFormOpen(false);
+    setCart([]);
+    setIsCartOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50">
