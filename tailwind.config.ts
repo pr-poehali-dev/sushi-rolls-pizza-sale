@@ -61,6 +61,11 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				japanese: {
+					red: 'hsl(var(--japanese-red))',
+					gold: 'hsl(var(--japanese-gold))',
+					dark: 'hsl(var(--japanese-dark))'
 				}
 			},
 			borderRadius: {

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,8 +14,12 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 0 64% 42%;
     --primary-foreground: 210 40% 98%;
+
+    --japanese-red: 0 64% 42%;
+    --japanese-gold: 45 100% 51%;
+    --japanese-dark: 0 0% 18%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -97,5 +102,6 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Noto Sans JP", sans-serif;
   }
 }
